@@ -1,5 +1,7 @@
+
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using System.Collections;
 using System.Collections.Generic;
 
 public class GameManager : MonoBehaviour
@@ -7,12 +9,16 @@ public class GameManager : MonoBehaviour
     [Header("UI Manager Reference")]
     public UIManager uiManager;
 
+    [Header("Level Generator Reference")]
+    public LevelGenerator levelGenerator;
+
     [Header("Game Settings")]
-    public float timeLimit = 35f; // إجمالي وقت اللعبة (7 جولات × 5 ثوانٍ)
+    public float timeLimit = 35f;
 
     private float gameTimer = 0f;
     private int fallsCount = 0;
     private bool isGameActive = false;
+    private bool isTransitioning = false;
 
     [System.Serializable]
     public struct ColorInfo
@@ -34,14 +40,20 @@ public class GameManager : MonoBehaviour
     };
 
     private List<ColorInfo> randomizedColors = new List<ColorInfo>();
-    private float colorTimer = 5f; // مدة كل لون 5 ثوانٍ
+
+    private float colorTimer = 5f;
     private int currentColorIndex = 0;
 
     void Start()
     {
         if (uiManager == null)
         {
-            uiManager = FindObjectOfType<UIManager>();
+            uiManager = FindAnyObjectByType<UIManager>();
+        }
+
+        if (levelGenerator == null)
+        {
+            levelGenerator = FindAnyObjectByType<LevelGenerator>();
         }
 
         if (uiManager != null)
@@ -49,61 +61,141 @@ public class GameManager : MonoBehaviour
             uiManager.SetStartScreenActive(true);
             uiManager.SetEndScreenActive(false);
         }
-        Time.timeScale = 0f; // إيقاف الوقت حتى الضغط على Start
+
+        Time.timeScale = 0f;
     }
 
     void Update()
     {
-        if (isGameActive)
+        if (!isGameActive)
+            return;
+
+        gameTimer += Time.deltaTime;
+
+        if (gameTimer >= timeLimit)
         {
-            // 1. عداد اللعبة العام
-            gameTimer += Time.deltaTime;
-            
-            // 2. منطق التعديل العشوائي والعد التنازلي لكل لون (كل 5 ثوانٍ)
+            GameOver();
+            return;
+        }
+
+        if (!isTransitioning)
+        {
             colorTimer -= Time.deltaTime;
-            
+
             if (colorTimer <= 0f)
             {
-                colorTimer = 5f; // إعادة ضبط العداد للون الجديد
-                currentColorIndex++;
+                colorTimer = 0f;
+                isTransitioning = true;
 
-                // إذا انتهت الـ 7 ألوان، نعيد خلطها عشوائياً من جديد لجولة أخرى
-                if (currentColorIndex >= randomizedColors.Count)
-                {
-                    ShuffleColors();
-                    currentColorIndex = 0;
-                }
-            }
-
-            // تحديث الواجهة
-            if (uiManager != null)
-            {
-                uiManager.UpdateTimer(gameTimer);
-                uiManager.UpdateFalls(fallsCount);
-                
-                if (randomizedColors.Count > 0)
+                if (levelGenerator != null && randomizedColors.Count > 0)
                 {
                     ColorInfo current = randomizedColors[currentColorIndex];
-                    uiManager.UpdateColorBubble(current.colorName, current.colorValue, colorTimer);
-                }
-            }
+                    int targetIndex = GetLevelColorIndex(current.colorName);
 
-            // 3. إنهاء اللعبة عند وصول الوقت إلى 35 ثانية بالضبط
-            if (gameTimer >= timeLimit)
+                    if (targetIndex >= 0)
+                    {
+                        levelGenerator.HideWrongTiles(targetIndex);
+                    }
+                }
+
+                StartCoroutine(NextRound());
+            }
+        }
+
+        if (uiManager != null)
+        {
+            uiManager.UpdateTimer(gameTimer);
+            uiManager.UpdateFalls(fallsCount);
+
+            if (randomizedColors.Count > 0)
             {
-                GameOver();
+                ColorInfo current = randomizedColors[currentColorIndex];
+
+                uiManager.UpdateColorBubble(
+                    current.colorName,
+                    current.colorValue,
+                    colorTimer
+                );
             }
         }
     }
 
-    // دالة لخلط الألوان عشوائياً (Randomize)
+    IEnumerator NextRound()
+    {
+        // Keep the wrong tiles hidden briefly.
+        yield return new WaitForSeconds(1.6f);
+
+        if (!isGameActive)
+        {
+            isTransitioning = false;
+            yield break;
+        }
+
+        if (levelGenerator != null)
+        {
+            levelGenerator.ShowAllTiles();
+        }
+
+        currentColorIndex++;
+
+        if (currentColorIndex >= randomizedColors.Count)
+        {
+            ShuffleColors();
+            currentColorIndex = 0;
+        }
+
+        colorTimer = 5f;
+
+        ApplyCurrentColorToLevel();
+
+        isTransitioning = false;
+    }
+
+    int GetLevelColorIndex(string colorName)
+    {
+        if (levelGenerator == null ||
+            levelGenerator.colorNames == null)
+        {
+            return -1;
+        }
+
+        for (int i = 0; i < levelGenerator.colorNames.Length; i++)
+        {
+            if (levelGenerator.colorNames[i] == colorName)
+                return i;
+        }
+
+        Debug.LogError("Color not found in LevelGenerator: " + colorName);
+        return -1;
+    }
+
+    void ApplyCurrentColorToLevel()
+    {
+        if (levelGenerator == null || randomizedColors.Count == 0)
+            return;
+
+        ColorInfo current = randomizedColors[currentColorIndex];
+        int targetIndex = GetLevelColorIndex(current.colorName);
+
+        if (targetIndex >= 0)
+        {
+            levelGenerator.ShuffleColors(targetIndex);
+        }
+    }
+
     void ShuffleColors()
     {
         randomizedColors = new List<ColorInfo>(allColors);
+
         for (int i = 0; i < randomizedColors.Count; i++)
         {
             ColorInfo temp = randomizedColors[i];
-            int randomIndex = Random.Range(i, randomizedColors.Count);
+
+            int randomIndex = Random.Range(
+                i,
+                randomizedColors.Count
+            );
+
             randomizedColors[i] = randomizedColors[randomIndex];
             randomizedColors[randomIndex] = temp;
         }
@@ -111,19 +203,37 @@ public class GameManager : MonoBehaviour
 
     public void StartGame()
     {
+        StopAllCoroutines();
+
         isGameActive = true;
+        isTransitioning = false;
+
         Time.timeScale = 1f;
+
         gameTimer = 0f;
+        fallsCount = 0;
         colorTimer = 5f;
         currentColorIndex = 0;
-        
-        // خلط الألوان فور بدء اللعبة ليكون الترتيب عشوائياً وغير متوقع
+
         ShuffleColors();
+
+        if (levelGenerator != null)
+        {
+            levelGenerator.ShowAllTiles();
+            ApplyCurrentColorToLevel();
+        }
+        else
+        {
+            Debug.LogError(
+                "LevelGenerator is missing. Assign it in the Inspector."
+            );
+        }
 
         if (uiManager != null)
         {
             uiManager.SetStartScreenActive(false);
-            uiManager.SetEndScreenActive(false); // التأكد من إخفاء شاشة النهاية عند البدء
+            uiManager.SetEndScreenActive(false);
+            uiManager.UpdateFalls(fallsCount);
         }
     }
 
@@ -136,6 +246,7 @@ public class GameManager : MonoBehaviour
     public void AddFall()
     {
         fallsCount++;
+
         if (uiManager != null)
         {
             uiManager.UpdateFalls(fallsCount);
@@ -145,17 +256,25 @@ public class GameManager : MonoBehaviour
     public void GameOver()
     {
         isGameActive = false;
-        Time.timeScale = 0f; // إيقاف اللعبة بالكامل
-        
+        isTransitioning = false;
+
+        StopAllCoroutines();
+
+        if (levelGenerator != null)
+        {
+            levelGenerator.ShowAllTiles();
+        }
+
+        Time.timeScale = 0f;
+
         if (uiManager != null)
         {
-            string finalStats = "Time: " + Mathf.FloorToInt(gameTimer) + "s\nFalls: " + fallsCount;
-            
-            // **إظهار شاشة النهاية وزر الـ Play Again بوضوح**
+            string finalStats =
+                "Time: " + Mathf.FloorToInt(gameTimer) +
+                "s\nFalls: " + fallsCount;
+
             uiManager.SetEndScreenActive(true, finalStats);
-            
-            // **إخفاء فقاعة الألوان فوراً عند انتهاء اللعبة**
-            uiManager.HideColorBubble(); 
+            uiManager.HideColorBubble();
         }
     }
 }

@@ -11,6 +11,7 @@ public class PlayerController : MonoBehaviour
 
     // آخر مكان آمن يرجع له اللاعب لما يطيح
     Vector3 checkpoint;
+    private bool isRespawning = false;
 
     void Start()
     {
@@ -70,19 +71,31 @@ public class PlayerController : MonoBehaviour
     }
 
     // يرجّع اللاعب لآخر Checkpoint
-    public void Respawn()
-    {
-        rigidbody.linearVelocity = Vector3.zero;
-        rigidbody.position = checkpoint;
-        transform.position = checkpoint;
+   
+public void Respawn()
+{
+    if (isRespawning)
+        return;
 
-        // يبلّغ الشخص الثالث (GameManager) إن اللاعب طاح
-        GameObject manager = GameObject.Find("GameManager");
-        if (manager != null)
-        {
-            manager.SendMessage("PlayerFell", SendMessageOptions.DontRequireReceiver);
-        }
+    isRespawning = true;
+
+    rigidbody.linearVelocity = Vector3.zero;
+    rigidbody.position = checkpoint;
+    transform.position = checkpoint;
+
+    GameObject manager = GameObject.Find("GameManager");
+
+    if (manager != null)
+    {
+        manager.SendMessage(
+            "AddFall",
+            SendMessageOptions.DontRequireReceiver
+        );
     }
+
+    isRespawning = false;
+}
+
 
     void OnTriggerEnter(Collider other)
     {
