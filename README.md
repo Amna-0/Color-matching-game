@@ -59,11 +59,11 @@ Help the bunny hop across a floating path of colored tiles. Every few seconds a 
 
 ## 👩‍💻 Team
 
-| Name | GitHub |
-|---|---|
-| Amna Mohammed | [@Amna-0](https://github.com/Amna-0) |
-| Leen Al Dahman | [@leendh23](https://github.com/leendh23) |
-| Salma Alhababi | [@Sqqur000](https://github.com/Sqqur000) |
+| Name | GitHub | LinkedIn |
+|---|---|---|
+| Amna Mohammed | [@Amna-0](https://github.com/Amna-0) | [LinkedIn](https://www.linkedin.com/in/amna-mohammed-612623381) |
+| Leen Al Dahman | [@leendh23](https://github.com/leendh23) | [LinkedIn](https://www.linkedin.com/in/leen-al-dahman-54457741b) |
+| Salma Alhababi | [@Sqqur000](https://github.com/Sqqur000) | [LinkedIn](https://www.linkedin.com/in/salma-alhababi-979a53421) |
 
 ---
 
