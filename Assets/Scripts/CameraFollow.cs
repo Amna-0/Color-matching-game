@@ -11,7 +11,7 @@ public class CameraFollow : MonoBehaviour
     void LateUpdate()
     {
         var wantedPosition = target.position + offset;
-        transform.position = Vector3.Lerp(transform.position, wantedPosition, smooth * Time.deltaTime);
+                transform.position = Vector3.Lerp(transform.position, wantedPosition, smooth * Time.unscaledDeltaTime);
 
         // تطالع شوي قدام اللاعب على طول الممر
         transform.LookAt(target.position + Vector3.up * 1.2f + Vector3.forward * 2);

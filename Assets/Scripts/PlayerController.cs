@@ -11,11 +11,13 @@ public class PlayerController : MonoBehaviour
 
     // آخر مكان آمن يرجع له اللاعب لما يطيح
     Vector3 checkpoint;
+    Vector3 startPosition;
     private bool isRespawning = false;
 
     void Start()
     {
         checkpoint = transform.position;
+        startPosition = transform.position;
     }
 
     // Update is called once per frame
@@ -95,7 +97,14 @@ public void Respawn()
 
     isRespawning = false;
 }
-
+    // يرجّع اللاعب لمنصة START
+    public void ResetToStart()
+    {
+        checkpoint = startPosition;
+        rigidbody.linearVelocity = Vector3.zero;
+        rigidbody.position = startPosition;
+        transform.position = startPosition;
+    }
 
     void OnTriggerEnter(Collider other)
     {

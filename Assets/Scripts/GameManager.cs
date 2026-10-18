@@ -15,6 +15,8 @@ public class GameManager : MonoBehaviour
     [Header("Game Settings")]
     public float timeLimit = 35f;
 
+    public int maxFalls = 3;
+
     private float gameTimer = 0f;
     private int fallsCount = 0;
     private bool isGameActive = false;
@@ -204,6 +206,11 @@ public class GameManager : MonoBehaviour
     public void StartGame()
     {
         StopAllCoroutines();
+        PlayerController player = FindAnyObjectByType<PlayerController>();
+        if (player != null)
+        {
+            player.ResetToStart();
+        }
 
         isGameActive = true;
         isTransitioning = false;
@@ -251,6 +258,12 @@ public class GameManager : MonoBehaviour
         {
             uiManager.UpdateFalls(fallsCount);
         }
+
+        // بعد ثلاث طيحات يخسر
+        if (fallsCount >= maxFalls)
+        {
+            GameOver();
+        }
     }
 
     public void GameOver()
@@ -270,7 +283,35 @@ public class GameManager : MonoBehaviour
         if (uiManager != null)
         {
             string finalStats =
-                "Time: " + Mathf.FloorToInt(gameTimer) +
+                "Game Over!\nTime: " + Mathf.FloorToInt(gameTimer) +
+                "s\nFalls: " + fallsCount;
+
+            uiManager.SetEndScreenActive(true, finalStats);
+            uiManager.HideColorBubble();
+        }
+    }
+    // تشتغل لما اللاعب يوصل منصة FINISH
+    public void PlayerFinished()
+    {
+        if (!isGameActive)
+            return;
+
+        isGameActive = false;
+        isTransitioning = false;
+
+        StopAllCoroutines();
+
+        if (levelGenerator != null)
+        {
+            levelGenerator.ShowAllTiles();
+        }
+
+        Time.timeScale = 0f;
+
+        if (uiManager != null)
+        {
+            string finalStats =
+                "You Win!\nTime: " + Mathf.FloorToInt(gameTimer) +
                 "s\nFalls: " + fallsCount;
 
             uiManager.SetEndScreenActive(true, finalStats);

@@ -68,7 +68,7 @@ public class LevelGenerator : MonoBehaviour
         CreateSafePlatform(
             "START",
             new Vector3(0f, -0.2f, 0f),
-            new Vector3(4.5f, 0.4f, 4.5f),
+            new Vector3(9.7f, 0.4f, 4.5f),
             "Checkpoint"
         );
 
@@ -80,8 +80,8 @@ public class LevelGenerator : MonoBehaviour
         // Safe bridge
         CreateSafePlatform(
     "Bridge 1",
-    new Vector3(0f, -0.2f, 12f),
-    new Vector3(8.5f, 0.4f, 3.5f),
+new Vector3(0f, -0.2f, 12.45f),
+new Vector3(9.7f, 0.4f, 2.7f),
     "Checkpoint"
 );
 
@@ -94,8 +94,8 @@ CreateSquareSection(
         // Safe bridge
         CreateSafePlatform(
     "Bridge 2",
-    new Vector3(0f, -0.2f, 23.1f),
-    new Vector3(8.5f, 0.4f, 3.5f),
+new Vector3(0f, -0.2f, 23.6f),
+new Vector3(9.7f, 0.4f, 2.8f),
     "Checkpoint"
 );
 
@@ -107,8 +107,8 @@ CreateSquareSection(
         // Finish platform
         CreateSafePlatform(
     "FINISH Platform",
-    new Vector3(0f, -0.2f, 35f),
-    new Vector3(8.5f, 0.4f, 4.5f),
+new Vector3(0f, -0.2f, 35f),
+new Vector3(9.7f, 0.4f, 3.3f),
     "Finish"
 );
 
@@ -355,7 +355,7 @@ CreateSquareSection(
         );
 
         label.transform.rotation = Quaternion.Euler(
-            0f, 180f, 0f
+            0f, 0f, 0f
         );
 
         TextMesh text = label.AddComponent<TextMesh>();

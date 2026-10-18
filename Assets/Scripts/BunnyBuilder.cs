@@ -27,6 +27,8 @@ public class BunnyBuilder : MonoBehaviour
     [HideInInspector] public Transform head;
     [HideInInspector] public List<Transform> ears = new List<Transform>();
     [HideInInspector] public List<Transform> eyes = new List<Transform>();
+    [HideInInspector] public List<Transform> arms = new List<Transform>();
+    [HideInInspector] public List<Transform> feet = new List<Transform>();
 
     Mesh sphereMesh, cylinderMesh, cubeMesh;
     Texture2D furTexture;
@@ -70,21 +72,23 @@ public class BunnyBuilder : MonoBehaviour
         // الأقدام
         foreach (float x in new[] { -0.42f, 0.42f })
         {
-            var foot = Fluff(root, 0.42f, 0.24f, 0.5f, 0.12f, fur, furColor);
-            foot.localPosition = new Vector3(x, 0.24f, 0.2f);
-            Sphere("FootPad", root, 0.2f, new Vector3(1.1f, 0.35f, 0.8f), new Vector3(x, 0.14f, 0.62f), new Vector3(0.3f, 0, 0), pink);
+            var foot = Group("Foot", root, new Vector3(x, 0.24f, 0.2f), Vector3.zero);
+            Fluff(foot, 0.42f, 0.24f, 0.5f, 0.12f, fur, furColor);
+            Sphere("FootPad", foot, 0.2f, new Vector3(1.1f, 0.35f, 0.8f), new Vector3(0, -0.1f, 0.42f), new Vector3(0.3f, 0, 0), pink);
+            feet.Add(foot);
         }
 
         // الجسم والبطن
         Fluff(root, 0.82f, 0.95f, 0.72f, 0.17f, fur, furColor).localPosition = new Vector3(0, 1.15f, 0);
         Fluff(root, 0.5f, 0.62f, 0.22f, 0.11f, cream, creamColor).localPosition = new Vector3(0, 1.05f, 0.6f);
 
-        // اليدين مفتوحة
+        // اليدين: قصيرة ومدورة طالعة من الجنب لتحت، وفي آخرها كف مدور
         foreach (float s in new[] { -1f, 1f })
         {
-            var arm = Group("Arm", root, new Vector3(0.55f * s, 1.78f, 0.05f), new Vector3(0, 0, s * (-Mathf.PI / 2 + 0.12f)));
-            Part("Limb", cylinderMesh, furLight, arm, new Vector3(0, 0.65f, 0), new Vector3(0.44f, 0.65f, 0.44f), Vector3.zero);
-            Fluff(arm, 0.3f, 0.3f, 0.28f, 0.1f, furLight, furLightColor).localPosition = new Vector3(0, 1.38f, 0);
+            var arm = Group("Arm", root, new Vector3(0.6f * s, 1.72f, 0.12f), new Vector3(0, 0, 0.7f * s));
+            Fluff(arm, 0.19f, 0.34f, 0.19f, 0.08f, furLight, furLightColor).localPosition = new Vector3(0, -0.3f, 0);
+            Fluff(arm, 0.21f, 0.21f, 0.21f, 0.08f, furLight, furLightColor).localPosition = new Vector3(0, -0.62f, 0.03f);
+            arms.Add(arm);
         }
 
         // الوشاح
